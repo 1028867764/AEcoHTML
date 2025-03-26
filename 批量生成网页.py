@@ -287,9 +287,9 @@ pages_map = {
     "菌类/菌类·味精/香菇": "Creature/JunleiXianggu"
 }
 
-# 3. 指定桌面路径（跨平台兼容）
-desktop_path = Path.home() / "Desktop" / "HTML_Files"
-desktop_path.mkdir(exist_ok=True)  # 自动创建文件夹
+# 3. 修改路径到D盘
+output_path = Path("D:/AEcoHTML/HTML_Files")  # 关键修改：指向D盘
+output_path.mkdir(exist_ok=True)     # 自动创建D盘的HTML_Files文件夹
 
 # 4. 批量生成HTML文件
 for page_text, filename in pages_map.items():
@@ -297,10 +297,10 @@ for page_text, filename in pages_map.items():
     html_content = html_template.format(title=page_text)
     
     # 生成文件路径（确保.html后缀）
-    file_path = desktop_path / f"{filename}.html"
+    file_path = output_path / f"{filename}.html"
     
     # 写入文件
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-print(f"✅ 已生成 {len(pages_map)} 个HTML文件到桌面目录: {desktop_path}")
+print(f"✅ 已生成 {len(pages_map)} 个HTML文件到桌面目录: {output_path}")
