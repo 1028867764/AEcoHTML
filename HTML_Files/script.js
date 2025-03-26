@@ -8,7 +8,18 @@ function loadContent() {
             const entries = data[currentPage];
             if (!entries || !entries.length) throw new Error("未找到数据");
 
+            // 默认按时间从新到旧排序
+            const sortedByDate = [...entries].sort((a, b) => {
+                const latestA = getLatestTimestamp(a.when);
+                const latestB = getLatestTimestamp(b.when);
+                return latestB - latestA; // 新日期在前
+            });
+
             const newWindow = window.open("", "_blank");
+            
+            // 将 renderCard 函数转换为字符串以便注入
+            const renderCardString = renderCard.toString();
+            
             newWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
@@ -29,11 +40,11 @@ function loadContent() {
                         }
                         .card-container {
                             display: flex;
-                            flex-direction: column;  /* 改为垂直排列 */
-                            align-items: center;     /* 水平居中 */
+                            flex-direction: column;
+                            align-items: center;
                             gap: 20px;
-                            max-width: 600px;       /* 限制容器宽度 */
-                            margin: 0 auto;         /* 水平居中 */
+                            max-width: 600px;
+                            margin: 0 auto;
                             padding: 20px;
                         }
                         .card {
@@ -41,6 +52,7 @@ function loadContent() {
                             border-radius: 8px;
                             padding: 20px;
                             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            width: 100%;
                         }
                         .card h3 {
                             color: #333;
@@ -73,15 +85,92 @@ function loadContent() {
                             color: white;
                             text-decoration: underline;
                         }
+                        .sort-buttons {
+                            display: flex;
+                            justify-content: center;
+                            gap: 10px;
+                            margin-bottom: 20px;
+                        }
+                        .sort-btn {
+                            padding: 8px 16px;
+                            background-color: #3498db;
+                            color: white;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            transition: background-color 0.3s;
+                        }
+                        .sort-btn:hover {
+                            background-color: #2980b9;
+                        }
                     </style>
                 </head>
                 <body>
                     <div class="itemTitle">
                         <h1>${pageTitle}</h1>
                     </div>
-                    <div class="card-container">
-                        ${entries.map(entry => renderCard(entry)).join("")}
+                    <div class="sort-buttons">
+                        <button class="sort-btn" onclick="sortByPrice('asc')">价格升序</button>
+                        <button class="sort-btn" onclick="sortByPrice('desc')">价格降序</button>
+                        <button class="sort-btn" id="timeSortBtn" onclick="toggleTimeSort()">日期从新到旧</button>
                     </div>
+                    <div class="card-container" id="cardContainer">
+                        ${sortedByDate.map(entry => renderCard(entry)).join("")}
+                    </div>
+
+                    <script>
+                        // 注入 renderCard 函数
+                        ${renderCardString}
+                        
+                        let allEntries = ${JSON.stringify(sortedByDate)};
+                        let isNewToOld = true; // 初始状态是从新到旧
+                        
+                        // 获取最新时间戳
+                        function getLatestTimestamp(whenArray) {
+                            if (!whenArray || !whenArray.length) return 0;
+                            const latest = whenArray.reduce((latest, time) => {
+                                const timestamp = new Date(
+                                    time.year, 
+                                    time.month - 1, 
+                                    time.day, 
+                                    time.hour
+                                ).getTime();
+                                return timestamp > latest ? timestamp : latest;
+                            }, 0);
+                            return latest;
+                        }
+                        
+                        // 价格排序
+                        function sortByPrice(order) {
+                            const sorted = [...allEntries].sort((a, b) => {
+                                const priceA = parseFloat(a.price) || 0;
+                                const priceB = parseFloat(b.price) || 0;
+                                return order === 'asc' ? priceA - priceB : priceB - priceA;
+                            });
+                            document.getElementById('cardContainer').innerHTML = 
+                                sorted.map(entry => renderCard(entry)).join('');
+                            
+                            // 重置时间排序状态
+                            isNewToOld = true;
+                            document.getElementById('timeSortBtn').textContent = '日期从新到旧';
+                        }
+                        
+                        // 切换时间排序
+                        function toggleTimeSort() {
+                            isNewToOld = !isNewToOld;
+                            const btn = document.getElementById('timeSortBtn');
+                            btn.textContent = isNewToOld ? '日期从新到旧' : '日期从旧到新';
+                            
+                            const sorted = [...allEntries].sort((a, b) => {
+                                const latestA = getLatestTimestamp(a.when);
+                                const latestB = getLatestTimestamp(b.when);
+                                return isNewToOld ? latestB - latestA : latestA - latestB;
+                            });
+                            
+                            document.getElementById('cardContainer').innerHTML = 
+                                sorted.map(entry => renderCard(entry)).join('');
+                        }
+                    </script>
                 </body>
                 </html>
             `);
@@ -93,7 +182,22 @@ function loadContent() {
         });
 }
 
-// 修正后的renderCard函数
+// 辅助函数：获取最新时间戳
+function getLatestTimestamp(whenArray) {
+    if (!whenArray || !whenArray.length) return 0;
+    const latest = whenArray.reduce((latest, time) => {
+        const timestamp = new Date(
+            time.year, 
+            time.month - 1, // 月份从0开始
+            time.day, 
+            time.hour
+        ).getTime();
+        return timestamp > latest ? timestamp : latest;
+    }, 0);
+    return latest;
+}
+
+// 渲染卡片函数
 function renderCard(entry) {
     return `
         <div class="card">
@@ -101,7 +205,7 @@ function renderCard(entry) {
             
             <!-- 时间信息 -->
             ${entry.when.map(time => `
-                <p>📅 时间: ${time.year}年${time.month}月${time.day}日 ${time.hour}时</p>
+                <p>📅 时间: ${time.year}年${time.month}月${time.day}日${time.hour}时</p>
             `).join("")}
 
             <!-- 地点信息 -->
