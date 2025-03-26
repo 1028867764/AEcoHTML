@@ -28,10 +28,13 @@ function loadContent() {
                             border-radius: 8px;
                         }
                         .card-container {
-                            display: grid;
-                            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                            display: flex;
+                            flex-direction: column;  /* 改为垂直排列 */
+                            align-items: center;     /* 水平居中 */
                             gap: 20px;
-                            margin: 0 auto;
+                            max-width: 600px;       /* 限制容器宽度 */
+                            margin: 0 auto;         /* 水平居中 */
+                            padding: 20px;
                         }
                         .card {
                             background: white;
