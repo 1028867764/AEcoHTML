@@ -1,0 +1,19 @@
+/* 设置 pricetag 类的样式 */
+.pricetag {
+    background-color: #FFFACD;  /* 淡黄色 */
+    height: 100px;              /* 特定高度值 */
+    display: flex;             /* 使用 flex 布局 */
+    justify-content: center;   /* 水平居中 */
+    align-items: center;       /* 垂直居中 */
+    border-radius: 4px;        /* 可选：添加圆角 */
+    margin-bottom: 10px;       /* 与下方元素的间距 */
+    font-weight: bold;         /* 加粗文字 */
+}
+
+/* 设置 description 类的样式 */
+.description {
+    text-align: center;        /* 文本居中 */
+    font-size: 18px;          /* 字体大小 */
+    padding: 10px;            /* 内边距 */
+    line-height: 1.5;         /* 行高 */
+}
